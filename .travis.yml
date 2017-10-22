@@ -1,0 +1,20 @@
+sudo: enabled
+group: deprecated-2017Q3
+language: cpp
+compiler:
+- gcc
+install:
+# Upgrade GCC
+- sudo apt-get install g++ cmake
+- sudo apt-get install libffi-dev libssl-dev
+# Install conan
+- pip install conan
+# Automatic detection of your arch, compiler, etc.
+- conan user
+
+script:
+# Download dependencies, build, test and create package
+- conan install . --build missing
+- cmake -G "Unix Makefiles"
+- cmake --build .
+- ./bin/rpool_test
