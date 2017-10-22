@@ -40,6 +40,33 @@ TEST(rpool_test_case, resource_deletion_test)
 
         for (int i = 0; i < 10; ++i)
             pool.add(new LiveCounter(live_objects_count));
+
+        ASSERT_EQ(live_objects_count, 10);
+    }
+
+    ASSERT_EQ(live_objects_count, 0) << "There are "
+                                     << live_objects_count
+                                     << " objects still alive!";
+}
+
+TEST(rpool_test_case, deletion_after_pool_test)
+{
+    std::atomic<int> live_objects_count{0};
+
+    {
+        std::shared_ptr<LiveCounter> resource;
+
+        {
+            rpool::Pool<LiveCounter> pool;
+
+            for (int i = 0; i < 10; ++i)
+                pool.add(new LiveCounter(live_objects_count));
+
+            resource = pool.acquire();
+        }
+
+        ASSERT_EQ(live_objects_count, 1)
+                << "The object must remain after removing the pool";
     }
 
     ASSERT_EQ(live_objects_count, 0) << "There are "
