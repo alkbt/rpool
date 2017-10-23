@@ -14,6 +14,11 @@ class resource_deleter {
 public:
     resource_deleter(std::shared_ptr<PoolImpl<T, D_, wait_>> pool):pool_{pool} {}
 
+    resource_deleter(const resource_deleter&) = default;
+    resource_deleter(resource_deleter&&) = default;
+    resource_deleter& operator=(const resource_deleter&) = default;
+    resource_deleter& operator=(resource_deleter&&) = default;
+
     void operator()(T * object) {
         std::shared_ptr<PoolImpl<T, D_, wait_>> origin = pool_.lock();
         if (origin)
@@ -29,6 +34,12 @@ private:
 template <class T, class D_, int wait_>
 class PoolImpl: public std::enable_shared_from_this<PoolImpl<T, D_, wait_>> {
 public:
+    PoolImpl() = default;
+    PoolImpl(const PoolImpl&) = delete;
+    PoolImpl(PoolImpl&&) = delete;
+    PoolImpl& operator=(const PoolImpl&) = delete;
+    PoolImpl& operator=(PoolImpl&&) = delete;
+
     void add(T * object) {
         std::unique_lock<std::mutex> lock(mut_);
         pool_.push_front(std::shared_ptr<T>(object, resource_deleter<T, D_, wait_>(
@@ -63,6 +74,13 @@ private:
 template <class T, class D_ = std::chrono::milliseconds, int wait_ = 0>
 class Pool {
 public:
+    Pool() = default;
+    Pool(const Pool&) = delete;
+    Pool(Pool&&) = default;
+
+    Pool& operator=(const Pool&) = delete;
+    Pool& operator=(Pool&&) = delete;
+
     void add(T * object) {
         pool_->add(object);
     }
@@ -72,7 +90,8 @@ public:
     }
 
 private:
-    std::shared_ptr<PoolImpl<T, D_, wait_>> pool_{std::make_shared<PoolImpl<T, D_, wait_>>()};
+    const std::shared_ptr<PoolImpl<T, D_, wait_>> pool_{
+                std::make_shared<PoolImpl<T, D_, wait_>>()};
 };
 
 }

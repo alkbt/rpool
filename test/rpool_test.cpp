@@ -148,6 +148,28 @@ TEST(rpool_test_case, wait_for_objects_test)
     ASSERT_EQ(null_objs, 0) << "Wait is broken!";
 }
 
+TEST(rpool_test_case, move_constructor_test)
+{
+    std::atomic<int> live_objects_count{0};
+
+    auto create_pool = [&]() {
+        rpool::Pool<LiveCounter> pool;
+        for (int i = 0; i < 10; ++i)
+            pool.add(new LiveCounter(live_objects_count));
+
+        return pool;
+    };
+
+    {
+        auto pool = create_pool();
+        for (int i = 0; i < 10; ++i)
+            auto object = pool.acquire();
+    }
+
+    ASSERT_EQ(live_objects_count, 0) << "There are "
+                                     << live_objects_count
+                                     << " objects still alive!";
+}
 
 int main(int argc, char ** argv)
 {
