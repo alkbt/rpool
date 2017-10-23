@@ -1,20 +1,50 @@
-sudo: enabled
+sudo: required
 group: deprecated-2017Q3
+dist: trusty
 language: cpp
-compiler:
-- gcc
+os:
+  - osx
+matrix:
+  include:
+    - os: linux
+      env: COMPILER=g++-5
+      addons:
+        apt:
+          packages:
+            - g++-5
+          sources: &sources
+            - llvm-toolchain-precise-3.8
+            - ubuntu-toolchain-r-test
+    - os: linux
+      env: COMPILER=g++-5 UNICODE_OPTIONS=-DCXXOPTS_USE_UNICODE_HELP=Yes
+      addons:
+        apt:
+          packages:
+            - g++-5
+          sources: *sources
+    - os: linux
+      env: COMPILER=clang++-3.8 CXXFLAGS=-stdlib=libc++
+      addons:
+        apt:
+          packages:
+            - clang-3.8
+            - libc++-dev
+          sources: *sources
+    - os: linux
+      env: COMPILER=clang++-3.8 CXXFLAGS=-stdlib=libc++ UNICODE_OPTIONS=-DCXXOPTS_USE_UNICODE_HELP=Yes
+      addons:
+        apt:
+          packages:
+            - clang-3.8
+            - libc++-dev
+      sources: *sources
+
 install:
-# Upgrade GCC
-- sudo apt-get install g++ cmake
-- sudo apt-get install libffi-dev libssl-dev
-# Install conan
 - pip install conan
-# Automatic detection of your arch, compiler, etc.
 - conan user
 
 script:
-# Download dependencies, build, test and create package
 - conan install . --build missing
-- cmake -G "Unix Makefiles"
+- cmake -DCMAKE_CXX_COMPILER=$COMPILER -DCMAKE_CXX_FLAGS=$CXXFLAGS $UNICODE_OPTIONS .
 - cmake --build .
 - ./bin/rpool_test
